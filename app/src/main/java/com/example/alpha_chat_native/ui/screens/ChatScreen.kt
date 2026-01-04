@@ -57,12 +57,10 @@ fun ChatScreen(
     // Attempt to find the "other" user to display their name/avatar
     val users by vm.users.collectAsState()
     
-    val targetUserId = remember(chatId, currentUserId) {
-        if (chatId == "global") null
-        else {
-            val parts = chatId.split("_")
-            parts.firstOrNull { it != currentUserId } ?: parts.firstOrNull()
-        }
+    // chatId is already the recipientId (other user's ID)
+    // No need to split - just use it directly
+    val targetUserId = remember(chatId) {
+        if (chatId == "global") null else chatId
     }
 
     val otherUser = remember(users, targetUserId) {

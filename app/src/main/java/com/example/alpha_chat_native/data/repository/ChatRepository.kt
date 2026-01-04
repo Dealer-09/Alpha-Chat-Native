@@ -208,21 +208,14 @@ class ChatRepository @Inject constructor(
      */
     suspend fun getConversation(recipientId: String, page: Int = 1): ConversationDetail? {
         return try {
-            Timber.d("getConversation: Calling API for recipientId=$recipientId")
             val response = api.getConversation(recipientId, page)
-            Timber.d("getConversation: Response success=${response.success}")
-            Timber.d("getConversation: Response conversation=${response.conversation != null}")
-            Timber.d("getConversation: Response messages count=${response.messages?.size ?: 0}")
             
             if (response.success && response.conversation != null) {
-                // Build ConversationDetail from separate response fields
-                val detail = ConversationDetail(
+                ConversationDetail(
                     conversation = response.conversation,
                     messages = response.messages ?: emptyList(),
                     pagination = response.pagination
                 )
-                Timber.d("getConversation: Returning ${detail.messages.size} messages")
-                detail
             } else {
                 Timber.w("Get conversation: success=${response.success}, conversation=${response.conversation != null}")
                 null

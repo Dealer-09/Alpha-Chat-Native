@@ -121,12 +121,14 @@ class SocketManager @Inject constructor(
             }
 
             // Direct message received
+            // Backend sends: { message: {...}, senderId: "..." } or { conversationId: "...", message: {...} }
             on("directMessage") { args ->
                 try {
-                    val data = args[0] as JSONObject
-                    val message = parseDirectMessage(data)
+                    val wrapper = args[0] as JSONObject
+                    // Extract the message object from the wrapper
+                    val messageJson = wrapper.optJSONObject("message") ?: wrapper
+                    val message = parseDirectMessage(messageJson)
                     _directMessages.tryEmit(message)
-                    Timber.d("Received direct message: ${message.id}")
                 } catch (e: Exception) {
                     Timber.e(e, "Error parsing direct message")
                 }
@@ -145,14 +147,22 @@ class SocketManager @Inject constructor(
             }
 
             // Online users update
+            // Backend sends: { users: ["userId1", "userId2", ...], count: N }
             on("onlineUsers") { args ->
                 try {
-                    val data = args[0] as JSONArray
-                    val users = parseOnlineUsers(data)
-                    _onlineUsers.value = users
-                    Timber.d("Online users updated: ${users.size}")
+                    val wrapper = args[0] as JSONObject
+                    val usersArray = wrapper.optJSONArray("users")
+                    if (usersArray != null) {
+                        val userIds = mutableListOf<String>()
+                        for (i in 0 until usersArray.length()) {
+                            userIds.add(usersArray.getString(i))
+                        }
+                        // Convert string IDs to OnlineUserInfo
+                        _onlineUsers.value = userIds.map { OnlineUserInfo(userId = it, status = "online", joinedAt = "") }
+                        Timber.d("Online users updated: ${userIds.size} users online")
+                    }
                 } catch (e: Exception) {
-                    Timber.e(e, "Error parsing online users")
+                    Timber.e(e, "Error parsing online users: ${args.getOrNull(0)}")
                 }
             }
 

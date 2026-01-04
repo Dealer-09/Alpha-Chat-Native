@@ -57,10 +57,15 @@ class ChatViewModel @Inject constructor(
         // Listen for incoming messages from Socket.IO
         viewModelScope.launch {
             repo.observeIncomingMessages().collect { message ->
+                val chatPartnerId = _currentChatId.value
+                
                 // Add to messages if it's for the current chat
-                if (message.conversation == _currentChatId.value || 
-                    message.fromId == currentUserId ||
-                    message.toId == currentUserId) {
+                val isForCurrentChat = chatPartnerId != null && (
+                    message.fromId == chatPartnerId ||  // Message from chat partner
+                    message.toId == chatPartnerId       // Message to chat partner (sent by us)
+                )
+                
+                if (isForCurrentChat) {
                     _messages.value = _messages.value + message
                 }
             }
@@ -96,11 +101,7 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                Timber.d("Loading messages for recipientId: $chatId")
-                
-                // chatId is the recipientId (other user's ID)
                 val detail = repo.getConversation(chatId)
-                Timber.d("Got conversation detail: ${detail?.messages?.size ?: 0} messages")
                 _messages.value = detail?.messages ?: emptyList()
             } catch (e: Exception) {
                 Timber.e(e, "Error loading messages")
@@ -120,7 +121,6 @@ class ChatViewModel @Inject constructor(
             try {
                 val message = repo.sendDirectMessage(toId, text)
                 if (message != null) {
-                    // Add to local list immediately (Socket will also broadcast)
                     _messages.value = _messages.value + message
                 }
             } catch (e: Exception) {
