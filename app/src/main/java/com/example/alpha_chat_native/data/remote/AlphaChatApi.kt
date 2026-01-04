@@ -178,7 +178,7 @@ data class ApiResponse<T>(
     @Json(name = "conversations") val conversations: List<Conversation>? = null,
     @Json(name = "conversation") val conversation: Conversation? = null,  // Changed from ConversationDetail
     @Json(name = "messages") val messages: List<Message>? = null,  // Separate messages field
-    @Json(name = "messageData") val messageData: Message? = null,
+    @Json(name = "message") val messageData: Message? = null,  // Backend returns "message" for sent DM
     @Json(name = "pagination") val pagination: Pagination? = null,  // Pagination info
     // For channel messages - uses "channelMessages" to avoid conflict
     @Json(name = "channelMessages") val channelMessages: List<ChannelMessage>? = null
