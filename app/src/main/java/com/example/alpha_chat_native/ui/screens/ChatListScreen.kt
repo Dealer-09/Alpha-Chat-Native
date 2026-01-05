@@ -14,7 +14,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -51,6 +55,13 @@ fun ChatListScreen(
 ) {
     val conversations by vm.conversations.collectAsState()
     var showMenu by remember { mutableStateOf(false) }
+    var isSearchActive by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    val filteredConversations = conversations.filter {
+        val name = it.otherUser?.displayName ?: "Unknown"
+        name.contains(searchQuery, ignoreCase = true)
+    }
 
     val textColor = Color.White
     val accentColor = SplashPrimary
@@ -78,7 +89,7 @@ fun ChatListScreen(
                 Spacer(modifier = Modifier.weight(1f))
                 
                 // Actions
-                IconButton(onClick = {}, modifier = Modifier.size(40.dp)) { 
+                IconButton(onClick = { isSearchActive = !isSearchActive }, modifier = Modifier.size(40.dp)) { 
                     Icon(Icons.Default.Search, contentDescription = "Search", tint = textColor) 
                 }
                 
@@ -114,12 +125,70 @@ fun ChatListScreen(
             }
         }
     ) { paddingValues ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            items(conversations) { conversation ->
+            // Search Bar Area
+            if (isSearchActive) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .height(44.dp)
+                        .border(1.dp, Color(0xFF39ff14).copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                        .background(Color(0xFF0d1117), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(
+                        onClick = { 
+                            isSearchActive = false
+                            searchQuery = ""
+                        },
+                        modifier = Modifier.size(20.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color(0xFF39ff14).copy(alpha = 0.7f)
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    BasicTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        modifier = Modifier.weight(1f),
+                        textStyle = TextStyle(
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Normal
+                        ),
+                        singleLine = true,
+                        cursorBrush = SolidColor(Color(0xFF39ff14)),
+                        decorationBox = { innerTextField ->
+                            Box {
+                                if (searchQuery.isEmpty()) {
+                                    Text(
+                                        text = "Search chats...",
+                                        color = Color(0xFF888888),
+                                        fontSize = 14.sp
+                                    )
+                                }
+                                innerTextField()
+                            }
+                        }
+                    )
+                }
+            }
+
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(filteredConversations) { conversation ->
                 ConversationItem(conversation = conversation) {
                     // Pass otherUser's ID - the API uses recipientId, not conversation._id
                     conversation.otherUser?.id?.let { recipientId ->
@@ -129,6 +198,7 @@ fun ChatListScreen(
             }
         }
     }
+}
 }
 
 @Composable
