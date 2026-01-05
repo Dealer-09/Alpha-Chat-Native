@@ -124,13 +124,8 @@ fun SelectUserScreen(
                         .padding(paddingValues)
                 ) {
                     items(filteredUsers) { user ->
-                        val chatId = if (currentUserId != null) {
-                            if (currentUserId < user.uid) "${currentUserId}_${user.uid}" else "${user.uid}_${currentUserId}"
-                        } else {
-                            user.uid 
-                        }
                         UserItem(user = user) {
-                            onUserSelected(chatId)
+                            onUserSelected(user.uid)
                         }
                     }
                 }

@@ -333,10 +333,11 @@ fun TerminalLoginWindow(
                                 horizontalArrangement = Arrangement.Center
                             ) {
                                 // GitHub icon (using text as fallback)
-                                Text(
-                                    text = "󰊤",  // Nerd font GitHub icon
-                                    fontSize = 24.sp,
-                                    color = Color.White
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_github),
+                                    contentDescription = "GitHub Logo",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
