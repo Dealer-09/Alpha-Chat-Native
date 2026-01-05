@@ -37,6 +37,7 @@
         <activity
             android:name="com.example.alpha_chat_native.MainActivity"
             android:exported="true"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.AlphaChatNative">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

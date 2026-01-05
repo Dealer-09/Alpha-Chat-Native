@@ -14,10 +14,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,6 +33,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.alpha_chat_native.data.models.Conversation
@@ -41,10 +49,19 @@ private val NeonGreen = Color(0xFF39FF14)
 @Composable
 fun ChatListScreen(
     onNewChatClick: () -> Unit,
-    onConversationClick: (String) -> Unit, 
+    onConversationClick: (String) -> Unit,
+    onLogout: () -> Unit,
     vm: ChatViewModel = hiltViewModel()
 ) {
     val conversations by vm.conversations.collectAsState()
+    var showMenu by remember { mutableStateOf(false) }
+    var isSearchActive by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    val filteredConversations = conversations.filter {
+        val name = it.otherUser?.displayName ?: "Unknown"
+        name.contains(searchQuery, ignoreCase = true)
+    }
 
     val textColor = Color.White
     val accentColor = SplashPrimary
@@ -52,16 +69,51 @@ fun ChatListScreen(
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            TopAppBar(
-                title = { Text("Chats", fontWeight = FontWeight.Bold, color = textColor) },
-                actions = {
-                    IconButton(onClick = {}) { Icon(Icons.Default.Search, contentDescription = "Search", tint = textColor) }
-                    IconButton(onClick = {}) { Icon(Icons.Default.MoreVert, contentDescription = "More", tint = textColor) }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
+            // Custom Compact Top Bar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .height(48.dp)
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Chats",
+                    fontWeight = FontWeight.Bold,
+                    color = textColor,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontSize = 20.sp
                 )
-            )
+                
+                Spacer(modifier = Modifier.weight(1f))
+                
+                // Actions
+                IconButton(onClick = { isSearchActive = !isSearchActive }, modifier = Modifier.size(40.dp)) { 
+                    Icon(Icons.Default.Search, contentDescription = "Search", tint = textColor) 
+                }
+                
+                Box {
+                    IconButton(onClick = { showMenu = true }, modifier = Modifier.size(40.dp)) { 
+                        Icon(Icons.Default.MoreVert, contentDescription = "More", tint = textColor) 
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false },
+                        modifier = Modifier.background(Color(0xFF1E1E1E))
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Logout", color = Color.White) },
+                            onClick = {
+                                showMenu = false
+                                vm.signOut {
+                                    onLogout()
+                                }
+                            }
+                        )
+                    }
+                }
+            }
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -73,12 +125,70 @@ fun ChatListScreen(
             }
         }
     ) { paddingValues ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            items(conversations) { conversation ->
+            // Search Bar Area
+            if (isSearchActive) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .height(44.dp)
+                        .border(1.dp, Color(0xFF39ff14).copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                        .background(Color(0xFF0d1117), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(
+                        onClick = { 
+                            isSearchActive = false
+                            searchQuery = ""
+                        },
+                        modifier = Modifier.size(20.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color(0xFF39ff14).copy(alpha = 0.7f)
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    BasicTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        modifier = Modifier.weight(1f),
+                        textStyle = TextStyle(
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Normal
+                        ),
+                        singleLine = true,
+                        cursorBrush = SolidColor(Color(0xFF39ff14)),
+                        decorationBox = { innerTextField ->
+                            Box {
+                                if (searchQuery.isEmpty()) {
+                                    Text(
+                                        text = "Search chats...",
+                                        color = Color(0xFF888888),
+                                        fontSize = 14.sp
+                                    )
+                                }
+                                innerTextField()
+                            }
+                        }
+                    )
+                }
+            }
+
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(filteredConversations) { conversation ->
                 ConversationItem(conversation = conversation) {
                     // Pass otherUser's ID - the API uses recipientId, not conversation._id
                     conversation.otherUser?.id?.let { recipientId ->
@@ -88,6 +198,7 @@ fun ChatListScreen(
             }
         }
     }
+}
 }
 
 @Composable

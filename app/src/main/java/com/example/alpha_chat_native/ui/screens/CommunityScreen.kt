@@ -61,6 +61,7 @@ data class ChatMessage(
     val isAdmin: Boolean = false
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommunityScreen(
     viewModel: CommunityViewModel = hiltViewModel()
@@ -74,11 +75,30 @@ fun CommunityScreen(
         it.name.lowercase().contains(searchQuery.lowercase()) 
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AlphaBackground)
-    ) {
+    // Scaffold to match ChatListScreen structure
+    Scaffold(
+        containerColor = Color.Transparent,
+        topBar = {
+             if (selectedChannel == null) {
+                 // Custom Compact Top Bar
+                 Row(
+                     modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .height(48.dp)
+                        .padding(horizontal = 16.dp),
+                     verticalAlignment = Alignment.CenterVertically
+                 ) {
+                     AlphaHeader()
+                 }
+             }
+        }
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
         if (selectedChannel == null) {
             // Channel List View
             ChannelListView(
@@ -89,7 +109,10 @@ fun CommunityScreen(
             )
         } else {
             // Channel Chat View - use id as key (matches socket listener)
-            val messages = viewModel.getMessages(selectedChannel!!.id)
+            val messages = viewModel.getMessages(
+                channelId = selectedChannel!!.id,
+                channelSlug = selectedChannel!!.slug
+            )
             
             ChannelChatView(
                 channel = selectedChannel!!,
@@ -108,6 +131,7 @@ fun CommunityScreen(
         }
     }
 }
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CHANNEL LIST VIEW
@@ -125,8 +149,8 @@ private fun ChannelListView(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Header
-        AlphaHeader()
+        // Header moved to TopAppBar
+        // AlphaHeader()
         
         Spacer(modifier = Modifier.height(16.dp))
         
@@ -169,8 +193,7 @@ private fun ChannelListView(
 @Composable
 private fun AlphaHeader() {
     Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(vertical = 8.dp)
+        verticalAlignment = Alignment.CenterVertically
     ) {
         // Terminal icon
         Text(

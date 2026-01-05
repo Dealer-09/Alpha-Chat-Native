@@ -80,8 +80,10 @@ class MainActivity : ComponentActivity() {
                                 onNewChatClick = {
                                     nav.navigate(Routes.SelectUserScreen)
                                 },
-                                onNavigateToProfile = {
-                                    nav.navigate(Routes.ProfileScreen)
+                                onLogout = {
+                                    nav.navigate(Routes.LOGIN) {
+                                        popUpTo(Routes.HomeScreen) { inclusive = true }
+                                    }
                                 }
                             )
                         }
@@ -106,20 +108,12 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
+                        // ProfileScreen removed as per request
+                        /*
                         composable<Routes.ProfileScreen> {
-                            ProfileScreen(
-                                onNavigateHome = {
-                                    nav.navigate(Routes.HomeScreen) {
-                                        popUpTo(Routes.ProfileScreen) { inclusive = true }
-                                    }
-                                },
-                                onNavigateToLogin = {
-                                    nav.navigate(Routes.LOGIN) {
-                                        popUpTo(Routes.HomeScreen) { inclusive = true }
-                                    }
-                                }
-                            )
+                             ...
                         }
+                        */
                         composable<Routes.CommunityScreen> {
                             CommunityScreen()
                         }
