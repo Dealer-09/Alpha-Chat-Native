@@ -84,9 +84,9 @@ fun UserRegistrationScreen(
                 isLoading = isLoading,
                 error = error,
                 onSignup = {
-                    vm.register(userName, email, password) {
-                         onRegisterSuccess()
-                    }
+                    // Registration is no longer supported - GitHub OAuth is the only auth method
+                    // This screen should redirect to LoginScreen for GitHub OAuth
+                    onNavigateToLogin()
                 },
                 onNavigateToLogin = onNavigateToLogin
             )

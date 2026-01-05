@@ -172,8 +172,8 @@ class SocketManager @Inject constructor(
                     val data = args.getOrNull(0) as? JSONObject ?: return@on
                     val senderId = data.getString("senderId")
                     val isTyping = data.getBoolean("isTyping")
-                    val channelId = data.optString("channelId", null)
-                    val recipientId = data.optString("recipientId", null)
+                    val channelId = data.optString("channelId", "").takeIf { it.isNotEmpty() }
+                    val recipientId = data.optString("recipientId", "").takeIf { it.isNotEmpty() }
 
                     _typingUsers.update { current ->
                         if (isTyping) {
@@ -276,7 +276,7 @@ class SocketManager @Inject constructor(
             messageType = json.optString("messageType", "text"),
             delivered = json.optBoolean("delivered", false),
             read = json.optBoolean("read", false),
-            createdAt = json.optString("createdAt", null)
+            createdAt = json.optString("createdAt", "").takeIf { it.isNotEmpty() }
         )
     }
 
@@ -290,7 +290,7 @@ class SocketManager @Inject constructor(
             content = json.optString("content", ""),
             messageType = json.optString("messageType", "text"),
             isPinned = json.optBoolean("isPinned", false),
-            createdAt = json.optString("createdAt", null)
+            createdAt = json.optString("createdAt", "").takeIf { it.isNotEmpty() }
         )
     }
 
