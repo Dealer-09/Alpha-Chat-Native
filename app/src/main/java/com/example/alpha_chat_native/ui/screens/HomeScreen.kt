@@ -31,7 +31,7 @@ private val AlphaTextPrimary = Color.White
 fun HomeScreen(
     onConversationClick: (String) -> Unit,
     onNewChatClick: () -> Unit,
-    onNavigateToProfile: () -> Unit
+    onLogout: () -> Unit
 ) {
     var selectedIndex by remember { mutableIntStateOf(0) }
     
@@ -123,22 +123,6 @@ fun HomeScreen(
                             unselectedTextColor = navContentColor.copy(alpha = 0.6f)
                         )
                     )
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Filled.Person, contentDescription = "Profile") },
-                        label = { Text("Profile") },
-                        selected = selectedIndex == 4,
-                        onClick = { 
-                            selectedIndex = 4 
-                            onNavigateToProfile()
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            indicatorColor = indicatorColor,
-                            selectedIconColor = SplashPrimary,
-                            selectedTextColor = SplashPrimary,
-                            unselectedIconColor = navContentColor.copy(alpha = 0.6f),
-                            unselectedTextColor = navContentColor.copy(alpha = 0.6f)
-                        )
-                    )
                 }
             }
         ) { innerPadding ->
@@ -146,7 +130,8 @@ fun HomeScreen(
                 when (selectedIndex) {
                     0 -> ChatListScreen(
                         onConversationClick = onConversationClick,
-                        onNewChatClick = onNewChatClick
+                        onNewChatClick = onNewChatClick,
+                        onLogout = onLogout
                     )
                     1 -> UpdateScreen()
                     2 -> CommunityScreen()

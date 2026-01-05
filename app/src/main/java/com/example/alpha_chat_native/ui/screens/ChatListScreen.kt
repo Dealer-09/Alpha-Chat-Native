@@ -18,6 +18,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,10 +44,12 @@ private val NeonGreen = Color(0xFF39FF14)
 @Composable
 fun ChatListScreen(
     onNewChatClick: () -> Unit,
-    onConversationClick: (String) -> Unit, 
+    onConversationClick: (String) -> Unit,
+    onLogout: () -> Unit,
     vm: ChatViewModel = hiltViewModel()
 ) {
     val conversations by vm.conversations.collectAsState()
+    var showMenu by remember { mutableStateOf(false) }
 
     val textColor = Color.White
     val accentColor = SplashPrimary
@@ -56,7 +61,27 @@ fun ChatListScreen(
                 title = { Text("Chats", fontWeight = FontWeight.Bold, color = textColor) },
                 actions = {
                     IconButton(onClick = {}) { Icon(Icons.Default.Search, contentDescription = "Search", tint = textColor) }
-                    IconButton(onClick = {}) { Icon(Icons.Default.MoreVert, contentDescription = "More", tint = textColor) }
+                    Box {
+                        IconButton(onClick = { showMenu = true }) { 
+                            Icon(Icons.Default.MoreVert, contentDescription = "More", tint = textColor) 
+                        }
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false },
+
+                            modifier = Modifier.background(Color(0xFF1E1E1E))
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Logout", color = Color.White) },
+                                onClick = {
+                                    showMenu = false
+                                    vm.signOut {
+                                        onLogout()
+                                    }
+                                }
+                            )
+                        }
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Transparent,
