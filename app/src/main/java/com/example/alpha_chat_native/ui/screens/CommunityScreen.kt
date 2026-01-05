@@ -89,7 +89,10 @@ fun CommunityScreen(
             )
         } else {
             // Channel Chat View - use id as key (matches socket listener)
-            val messages = viewModel.getMessages(selectedChannel!!.id)
+            val messages = viewModel.getMessages(
+                channelId = selectedChannel!!.id,
+                channelSlug = selectedChannel!!.slug
+            )
             
             ChannelChatView(
                 channel = selectedChannel!!,

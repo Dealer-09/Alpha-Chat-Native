@@ -266,10 +266,20 @@ class SocketManager @Inject constructor(
 
     private fun parseDirectMessage(json: JSONObject): Message {
         val senderJson = json.optJSONObject("sender")
+        val senderId = if (senderJson == null) json.optString("sender", "") else ""
+        
+        val senderUser = if (senderJson != null) {
+            parseUser(senderJson)
+        } else if (senderId.isNotEmpty()) {
+            // Fallback if sender is just an ID string
+            User(_id = senderId, username = "Unknown")
+        } else {
+            null
+        }
         
         return Message(
             id = json.optString("_id", ""),
-            sender = senderJson?.let { parseUser(it) },
+            sender = senderUser,
             receiver = json.optString("receiver", ""),  // Now just a string ID
             conversation = json.optString("conversation", ""),
             content = json.optString("content", ""),

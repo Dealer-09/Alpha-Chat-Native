@@ -79,12 +79,17 @@ class CommunityViewModel @Inject constructor(
     /**
      * Get messages for a channel
      */
-    fun getMessages(channelId: String): SnapshotStateList<ChatMessage> {
+    /**
+     * Get messages for a channel
+     * @param channelId Used as key for local storage (matches socket events)
+     * @param channelSlug Used for API call to fetch history
+     */
+    fun getMessages(channelId: String, channelSlug: String): SnapshotStateList<ChatMessage> {
         // If we don't have a list for this channel yet, create it and load messages
         if (!_channelMessages.containsKey(channelId)) {
             val list = SnapshotStateList<ChatMessage>()
             _channelMessages[channelId] = list
-            loadChannelMessages(channelId, list)
+            loadChannelMessages(channelId, channelSlug, list)
         }
         return _channelMessages[channelId]!!
     }
@@ -92,14 +97,14 @@ class CommunityViewModel @Inject constructor(
     /**
      * Load messages from backend API
      */
-    private fun loadChannelMessages(channelId: String, list: SnapshotStateList<ChatMessage>) {
+    private fun loadChannelMessages(channelId: String, channelSlug: String, list: SnapshotStateList<ChatMessage>) {
         viewModelScope.launch {
             try {
                 // Join the channel's socket room for real-time updates
                 repository.joinChannelRoom(channelId)
 
-                // Fetch messages from API
-                val detail = repository.getChannel(channelId)
+                // Fetch messages from API using SLUG (backend requirement)
+                val detail = repository.getChannel(channelSlug)
                 if (detail != null) {
                     list.clear()
                     detail.messages.forEach { msg ->
