@@ -108,9 +108,14 @@ dependencies {
     // --- DataStore for session persistence ---
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
-    // --- MongoDB Realm ---
+    // --- Room Database for offline persistence ---
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    kapt("androidx.room:room-compiler:2.6.1")
+
+    // --- MongoDB Realm (unused, kept for future) ---
     implementation("io.realm.kotlin:library-base:2.0.0")
-    implementation("io.realm.kotlin:library-sync:2.0.0") // If you need Sync
+    implementation("io.realm.kotlin:library-sync:2.0.0")
 
     // --- Testing ---
     testImplementation(libs.junit)

@@ -1,5 +1,10 @@
 package com.example.alpha_chat_native.data.repository
 
+import com.example.alpha_chat_native.data.local.dao.ConversationDao
+import com.example.alpha_chat_native.data.local.dao.MessageDao
+import com.example.alpha_chat_native.data.local.dao.UserDao
+import com.example.alpha_chat_native.data.local.entities.toEntity
+import com.example.alpha_chat_native.data.local.entities.toModel
 import com.example.alpha_chat_native.data.models.*
 import com.example.alpha_chat_native.data.remote.*
 import kotlinx.coroutines.flow.Flow
@@ -13,13 +18,16 @@ import javax.inject.Singleton
 /**
  * Repository for all chat operations.
  * Uses Retrofit for API calls and Socket.IO for real-time messaging.
- * Replaces the previous Firebase-based implementation.
+ * Implements offline-first pattern with Room database caching.
  */
 @Singleton
 class ChatRepository @Inject constructor(
     private val api: AlphaChatApi,
     private val socketManager: SocketManager,
-    private val tokenManager: TokenManager
+    private val tokenManager: TokenManager,
+    private val userDao: UserDao,
+    private val messageDao: MessageDao,
+    private val conversationDao: ConversationDao
 ) {
     private var _currentUser: User? = null
     
@@ -127,21 +135,44 @@ class ChatRepository @Inject constructor(
     fun observeUsers(): Flow<List<User>> = _users.asStateFlow()
 
     /**
-     * Fetch all users from API
+     * Fetch all users - offline-first pattern
+     * 1. Load cached data immediately
+     * 2. Try to fetch fresh data from API
+     * 3. Cache new data on success
      */
     suspend fun fetchUsers(): List<User> {
+        // Load from cache first
+        try {
+            val cached = userDao.getAll()
+            if (cached.isNotEmpty()) {
+                val users = cached.map { it.toModel() }
+                _users.value = users
+                Timber.d("Loaded ${users.size} users from cache")
+            }
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to load cached users")
+        }
+        
+        // Try to fetch fresh data from API
         return try {
             val response = api.getAllUsers()
             if (response.success) {
                 val users = response.users ?: emptyList()
                 _users.value = users
+                // Cache for offline access
+                try {
+                    userDao.insertAll(users.map { it.toEntity() })
+                    Timber.d("Cached ${users.size} users")
+                } catch (e: Exception) {
+                    Timber.w(e, "Failed to cache users")
+                }
                 users
             } else {
-                emptyList()
+                _users.value // Return cached data
             }
         } catch (e: Exception) {
-            Timber.e(e, "Fetch users failed")
-            emptyList()
+            Timber.w(e, "Fetch users failed, using cached data")
+            _users.value // Return cached data on network error
         }
     }
 
@@ -177,9 +208,25 @@ class ChatRepository @Inject constructor(
     fun observeConversations(): Flow<List<Conversation>> = _conversations.asStateFlow()
 
     /**
-     * Fetch all conversations with other user populated
+     * Fetch all conversations - offline-first pattern
+     * 1. Load cached conversations immediately
+     * 2. Try to fetch fresh data from API
+     * 3. Cache new data on success
      */
     suspend fun fetchConversations(): List<Conversation> {
+        // Load from cache first
+        try {
+            val cached = conversationDao.getAll()
+            if (cached.isNotEmpty()) {
+                val convos = cached.map { it.toModel() }
+                _conversations.value = convos
+                Timber.d("Loaded ${convos.size} conversations from cache")
+            }
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to load cached conversations")
+        }
+        
+        // Try to fetch fresh data from API
         return try {
             val response = api.getConversations()
             if (response.success) {
@@ -193,36 +240,93 @@ class ChatRepository @Inject constructor(
                 }
                 
                 _conversations.value = populatedConvos
+                
+                // Cache for offline access
+                try {
+                    conversationDao.insertAll(populatedConvos.map { it.toEntity() })
+                    Timber.d("Cached ${populatedConvos.size} conversations")
+                } catch (e: Exception) {
+                    Timber.w(e, "Failed to cache conversations")
+                }
+                
                 populatedConvos
             } else {
-                emptyList()
+                _conversations.value // Return cached data
             }
         } catch (e: Exception) {
-            Timber.e(e, "Fetch conversations failed")
-            emptyList()
+            Timber.w(e, "Fetch conversations failed, using cached data")
+            _conversations.value // Return cached data on network error
         }
     }
 
     /**
-     * Get conversation with specific user
+     * Get conversation with specific user - offline-first pattern
+     * 1. Load cached messages immediately
+     * 2. Try to fetch fresh data from API
+     * 3. Cache new messages on success
      */
     suspend fun getConversation(recipientId: String, page: Int = 1): ConversationDetail? {
+        // Load from cache first
+        var cachedMessages: List<Message> = emptyList()
+        try {
+            val cached = messageDao.getByRecipient(recipientId)
+            if (cached.isNotEmpty()) {
+                cachedMessages = cached.map { it.toModel() }
+                Timber.d("Loaded ${cachedMessages.size} cached messages for recipient $recipientId")
+            }
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to load cached messages")
+        }
+        
+        // Try to fetch fresh data from API
         return try {
             val response = api.getConversation(recipientId, page)
             
             if (response.success && response.conversation != null) {
+                val messages = response.messages ?: emptyList()
+                
+                // Cache messages for offline access
+                try {
+                    if (messages.isNotEmpty()) {
+                        messageDao.insertAll(messages.map { it.toEntity() })
+                        Timber.d("Cached ${messages.size} messages")
+                    }
+                } catch (e: Exception) {
+                    Timber.w(e, "Failed to cache messages")
+                }
+                
                 ConversationDetail(
                     conversation = response.conversation,
-                    messages = response.messages ?: emptyList(),
+                    messages = messages,
                     pagination = response.pagination
                 )
             } else {
-                Timber.w("Get conversation: success=${response.success}, conversation=${response.conversation != null}")
-                null
+                // Return cached data if API fails
+                if (cachedMessages.isNotEmpty()) {
+                    Timber.d("API returned no data, using ${cachedMessages.size} cached messages")
+                    ConversationDetail(
+                        conversation = Conversation(id = recipientId),
+                        messages = cachedMessages,
+                        pagination = null
+                    )
+                } else {
+                    Timber.w("Get conversation: success=${response.success}, conversation=${response.conversation != null}")
+                    null
+                }
             }
         } catch (e: Exception) {
-            Timber.e(e, "Get conversation failed: ${e.message}")
-            null
+            // Return cached data on network error
+            if (cachedMessages.isNotEmpty()) {
+                Timber.w(e, "API failed, returning ${cachedMessages.size} cached messages")
+                ConversationDetail(
+                    conversation = Conversation(id = recipientId),
+                    messages = cachedMessages,
+                    pagination = null
+                )
+            } else {
+                Timber.e(e, "Get conversation failed, no cached data: ${e.message}")
+                null
+            }
         }
     }
 

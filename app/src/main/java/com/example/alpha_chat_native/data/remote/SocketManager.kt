@@ -124,7 +124,7 @@ class SocketManager @Inject constructor(
             // Backend sends: { message: {...}, senderId: "..." } or { conversationId: "...", message: {...} }
             on("directMessage") { args ->
                 try {
-                    val wrapper = args[0] as JSONObject
+                    val wrapper = args.getOrNull(0) as? JSONObject ?: return@on
                     // Extract the message object from the wrapper
                     val messageJson = wrapper.optJSONObject("message") ?: wrapper
                     val message = parseDirectMessage(messageJson)
@@ -137,7 +137,7 @@ class SocketManager @Inject constructor(
             // Channel message received
             on("channelMessage") { args ->
                 try {
-                    val data = args[0] as JSONObject
+                    val data = args.getOrNull(0) as? JSONObject ?: return@on
                     val message = parseChannelMessage(data)
                     _channelMessages.tryEmit(message)
                     Timber.d("Received channel message: ${message.id}")
@@ -150,7 +150,7 @@ class SocketManager @Inject constructor(
             // Backend sends: { users: ["userId1", "userId2", ...], count: N }
             on("onlineUsers") { args ->
                 try {
-                    val wrapper = args[0] as JSONObject
+                    val wrapper = args.getOrNull(0) as? JSONObject ?: return@on
                     val usersArray = wrapper.optJSONArray("users")
                     if (usersArray != null) {
                         val userIds = mutableListOf<String>()
@@ -169,7 +169,7 @@ class SocketManager @Inject constructor(
             // Typing indicator
             on("userTyping") { args ->
                 try {
-                    val data = args[0] as JSONObject
+                    val data = args.getOrNull(0) as? JSONObject ?: return@on
                     val senderId = data.getString("senderId")
                     val isTyping = data.getBoolean("isTyping")
                     val channelId = data.optString("channelId", null)
@@ -190,7 +190,7 @@ class SocketManager @Inject constructor(
             // Messages read event
             on("messagesRead") { args ->
                 try {
-                    val data = args[0] as JSONObject
+                    val data = args.getOrNull(0) as? JSONObject ?: return@on
                     val conversationId = data.getString("conversationId")
                     val readerId = data.getString("readerId")
                     _messagesRead.tryEmit(MessagesReadEvent(conversationId, readerId))
@@ -303,21 +303,6 @@ class SocketManager @Inject constructor(
             role = json.optString("role", "member"),
             isOnline = json.optBoolean("isOnline", false)
         )
-    }
-
-    private fun parseOnlineUsers(array: JSONArray): List<OnlineUserInfo> {
-        val users = mutableListOf<OnlineUserInfo>()
-        for (i in 0 until array.length()) {
-            val obj = array.getJSONObject(i)
-            users.add(
-                OnlineUserInfo(
-                    userId = obj.optString("userId", ""),
-                    status = obj.optString("status", "online"),
-                    joinedAt = obj.optString("joinedAt", "")
-                )
-            )
-        }
-        return users
     }
 }
 

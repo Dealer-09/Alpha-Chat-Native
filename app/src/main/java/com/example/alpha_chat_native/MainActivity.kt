@@ -48,21 +48,11 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-                        composable<Routes.WelcomeScreen> {
-                            WelcomeScreen(
-                                onNavigateToLogin = {
-                                    nav.navigate(Routes.LOGIN)
-                                },
-                                onNavigateToRegister = {
-                                    nav.navigate(Routes.UserRegistrationScreen)
-                                }
-                            )
-                        }
                         composable<Routes.UserRegistrationScreen> {
                             UserRegistrationScreen(
                                 onRegisterSuccess = {
                                     nav.navigate(Routes.HomeScreen) {
-                                        popUpTo(Routes.WelcomeScreen) { inclusive = true }
+                                        popUpTo(Routes.LOGIN) { inclusive = true }
                                     }
                                 },
                                 onNavigateToLogin = {

@@ -59,13 +59,11 @@ class ChatViewModel @Inject constructor(
             repo.observeIncomingMessages().collect { message ->
                 val chatPartnerId = _currentChatId.value
                 
-                // Add to messages if it's for the current chat
-                val isForCurrentChat = chatPartnerId != null && (
-                    message.fromId == chatPartnerId ||  // Message from chat partner
-                    message.toId == chatPartnerId       // Message to chat partner (sent by us)
-                )
+                // Add to messages if it's from the current chat partner
+                // (Sender doesn't receive socket events - they get message from API response)
+                val isFromChatPartner = chatPartnerId != null && message.fromId == chatPartnerId
                 
-                if (isForCurrentChat) {
+                if (isFromChatPartner) {
                     _messages.value = _messages.value + message
                 }
             }
@@ -194,17 +192,4 @@ class ChatViewModel @Inject constructor(
         repo.markMessagesAsRead(conversationId, senderId)
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // LEGACY METHODS (for backwards compatibility during migration)
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    @Deprecated("Use LoginViewModel for auth")
-    fun login(email: String, pass: String, onSuccess: () -> Unit) {
-        _error.value = "Please use GitHub login"
-    }
-
-    @Deprecated("Use LoginViewModel for auth")
-    fun register(name: String, email: String, pass: String, onSuccess: () -> Unit) {
-        _error.value = "Please use GitHub login"
-    }
 }
