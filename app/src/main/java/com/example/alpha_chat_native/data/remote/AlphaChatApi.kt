@@ -7,7 +7,7 @@ import retrofit2.http.*
 
 /**
  * Retrofit API interface for AlphaChat-V2 backend.
- * Base URL: https://alphachat-v2-backend.onrender.com/
+ * Base URL: https://alphachat-v2.onrender.com/
  */
 interface AlphaChatApi {
     

@@ -33,16 +33,15 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.alpha_chat_native.R
+import com.example.alpha_chat_native.ui.theme.AlphaBackground
+import com.example.alpha_chat_native.ui.theme.AlphaGitHubBlack
+import com.example.alpha_chat_native.ui.theme.AlphaPrimary
+import com.example.alpha_chat_native.ui.theme.AlphaSecondary
 import com.example.alpha_chat_native.ui.viewmodels.LoginState
 import com.example.alpha_chat_native.ui.viewmodels.LoginViewModel
 import timber.log.Timber
 import kotlin.random.Random
 
-// --- Colors from SplashScreen ---
-private val SplashBackground = Color(0xFF012106)
-private val SplashPrimary = Color(0xFF07AD52)
-private val SplashSecondary = Color(0xFF04450F)
-private val GitHubBlack = Color(0xFF24292e)
 
 private data class LoginParticle(
     val x: Float,
@@ -55,7 +54,6 @@ private data class LoginParticle(
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
-    onSignUpClick: () -> Unit = {},  // Not used anymore - GitHub OAuth only
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val loginState by viewModel.loginState.collectAsState()
@@ -118,7 +116,7 @@ fun GitHubOAuthWebView(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(SplashBackground)
+            .background(AlphaBackground)
     ) {
         // Back button
         IconButton(
@@ -140,7 +138,7 @@ fun GitHubOAuthWebView(
         if (isLoading) {
             CircularProgressIndicator(
                 modifier = Modifier.align(Alignment.Center),
-                color = SplashPrimary
+                color = AlphaPrimary
             )
         }
 
@@ -170,7 +168,7 @@ fun GitHubOAuthWebView(
                             url?.let {
                                 if (it.contains("/mobile/success")) {
                                     val cookies = CookieManager.getInstance()
-                                        .getCookie("https://alphachat-v2-backend.onrender.com")
+                                        .getCookie("https://alphachat-v2.onrender.com")
                                     if (cookies != null && cookies.contains("connect.sid")) {
                                         Timber.d("OAuth success! Cookies: ${cookies.take(50)}...")
                                         onCookiesCaptured(cookies)
@@ -221,10 +219,10 @@ fun TerminalLoginWindow(
         )
     )
     
-    val borderColor = SplashPrimary
+    val borderColor = AlphaPrimary
     val textColor = Color.White
-    val accentColor = SplashPrimary
-    val secondaryAccent = SplashSecondary
+    val accentColor = AlphaPrimary
+    val secondaryAccent = AlphaSecondary
 
     Card(
         modifier = Modifier
@@ -256,7 +254,7 @@ fun TerminalLoginWindow(
                         text = "alpha-chat@terminal ~ login",
                         fontFamily = FontFamily.Monospace,
                         fontSize = 12.sp,
-                        color = SplashPrimary
+                        color = AlphaPrimary
                     )
                     Spacer(modifier = Modifier.weight(1f))
                 }
@@ -300,7 +298,7 @@ fun TerminalLoginWindow(
                         text = "$ git auth login --with-github",
                         fontFamily = FontFamily.Monospace,
                         fontSize = 12.sp,
-                        color = SplashPrimary,
+                        color = AlphaPrimary,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
@@ -315,7 +313,7 @@ fun TerminalLoginWindow(
                     // GitHub Login Button
                     Button(
                         onClick = onGithubSignIn,
-                        colors = ButtonDefaults.buttonColors(containerColor = GitHubBlack),
+                        colors = ButtonDefaults.buttonColors(containerColor = AlphaGitHubBlack),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
@@ -486,3 +484,7 @@ fun DynamicParticleBackground() {
         }
     }
 }
+// Color aliases used in this file (mapped from theme)
+private val SplashBackground = AlphaBackground
+private val SplashPrimary = AlphaPrimary
+private val SplashSecondary = AlphaSecondary

@@ -23,14 +23,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.alpha_chat_native.R
+import com.example.alpha_chat_native.ui.theme.AlphaBackground
+import com.example.alpha_chat_native.ui.theme.AlphaPrimary
+import com.example.alpha_chat_native.ui.theme.AlphaSecondary
 import com.example.alpha_chat_native.vm.ChatViewModel
 import kotlinx.coroutines.delay
 import kotlin.random.Random
-
-// --- Theme Colors (Matched with Login/Registration) ---
-private val SplashBackground = Color(0xFF012106)
-private val SplashPrimary = Color(0xFF07AD52)
-private val SplashSecondary = Color(0xFF04450F)
 
 @Composable
 fun SplashScreen(
@@ -302,3 +300,9 @@ private data class SplashParticle(
 )
 
 private val EaseOutBack = CubicBezierEasing(0.34f, 1.56f, 0.64f, 1f)
+
+// Color aliases — mapped from the AlphaChat theme
+private val SplashBackground = AlphaBackground
+private val SplashPrimary = AlphaPrimary
+private val SplashSecondary = AlphaSecondary
+

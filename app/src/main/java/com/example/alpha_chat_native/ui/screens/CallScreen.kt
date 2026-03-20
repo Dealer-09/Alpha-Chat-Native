@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import timber.log.Timber
 
 data class Contact(val name: String, val phoneNumber: String)
 
@@ -124,9 +125,14 @@ fun CallScreen() {
 private fun fetchContacts(context: Context): List<Contact> {
     val contacts = mutableListOf<Contact>()
     try {
+        // Only fetch the two columns we need — avoids loading all contact fields into memory
+        val projection = arrayOf(
+            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+            ContactsContract.CommonDataKinds.Phone.NUMBER
+        )
         val cursor = context.contentResolver.query(
             ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-            null,
+            projection,
             null,
             null,
             ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC"
@@ -143,7 +149,7 @@ private fun fetchContacts(context: Context): List<Contact> {
             }
         }
     } catch (e: Exception) {
-        e.printStackTrace()
+        Timber.e(e, "Failed to fetch contacts")
     }
     return contacts
 }

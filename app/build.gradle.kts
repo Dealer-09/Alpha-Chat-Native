@@ -3,24 +3,20 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
-    id("kotlin-kapt")
+    alias(libs.plugins.ksp)
     alias(libs.plugins.hilt.android)
     id("com.google.gms.google-services")
-    id("io.realm.kotlin") version "2.0.0"
+    // Realm removed — was unused (labeled as such in build.gradle), added ~6MB to APK
 }
 
 android {
     namespace = "com.example.alpha_chat_native"
-    compileSdk = 34
-
-    kapt {
-        correctErrorTypes = true
-    }
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.alpha_chat_native"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -28,7 +24,7 @@ android {
     }
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -67,7 +63,7 @@ dependencies {
 
     // --- Hilt ---
     implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
+    ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
 
     // --- Firebase ---
@@ -111,11 +107,9 @@ dependencies {
     // --- Room Database for offline persistence ---
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
-    kapt("androidx.room:room-compiler:2.6.1")
+    ksp("androidx.room:room-compiler:2.6.1")
 
-    // --- MongoDB Realm (unused, kept for future) ---
-    implementation("io.realm.kotlin:library-base:2.0.0")
-    implementation("io.realm.kotlin:library-sync:2.0.0")
+    // MongoDB Realm removed — was unused, added ~6MB to APK + slow build times
 
     // --- Testing ---
     testImplementation(libs.junit)

@@ -33,11 +33,11 @@ import com.example.alpha_chat_native.vm.ChatViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-// --- Colors ---
-private val SplashBackground = Color(0xFF012106)
-private val SplashPrimary = Color(0xFF07AD52)
-private val SplashSecondary = Color(0xFF04450F)
-private val NeonGreen = Color(0xFF39FF14)
+import com.example.alpha_chat_native.ui.theme.AlphaBackground
+import com.example.alpha_chat_native.ui.theme.AlphaPrimary
+import com.example.alpha_chat_native.ui.theme.AlphaSecondary
+import com.example.alpha_chat_native.ui.theme.AlphaNeonGreen
+import com.example.alpha_chat_native.ui.theme.AlphaDark
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,24 +71,23 @@ fun ChatScreen(
         }
     }
 
-    val isDark = isSystemInDarkTheme()
 
     // Dynamic Background
     val backgroundBrush = Brush.verticalGradient(
         colors = listOf(
-            SplashBackground,
+            AlphaBackground,
             Color(0xFF020E2A),
-            SplashBackground
+            AlphaBackground
         )
     )
 
     // Chat Bubble Colors (Neon Style)
-    val myMessageColor = SplashPrimary.copy(alpha = 0.8f)
+    val myMessageColor = AlphaPrimary.copy(alpha = 0.8f)
     val otherMessageColor = Color(0xFF020E2A).copy(alpha = 0.8f) // Dark glass
     val textColor = Color.White
     
     // Accent Colors
-    val accentColor = NeonGreen
+    val accentColor = AlphaNeonGreen
     val textFieldColor = Color(0xFF020E2A).copy(alpha = 0.5f)
 
     val displayImage = if (otherUser.imageUrl.isNotEmpty()) otherUser.imageUrl else "https://ui-avatars.com/api/?name=${otherUser.displayName}"
@@ -125,7 +124,7 @@ fun ChatScreen(
                                     Text(
                                         text = "Online", 
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = NeonGreen
+                                        color = AlphaNeonGreen
                                     )
                                 }
                             }
@@ -169,7 +168,10 @@ fun ChatScreen(
                     contentPadding = PaddingValues(8.dp),
                     verticalArrangement = Arrangement.Bottom,
                     reverseLayout = true
-                ) {                    items(messages.reversed()) { msg ->
+                ) {
+                    // reverseLayout=true: index 0 renders at the BOTTOM.
+                    // ViewModel stores messages newest-first so newest appears at the bottom.
+                    items(messages) { msg ->
                         val isMe = msg.fromId == currentUserId
                         
                         MessageBubble(

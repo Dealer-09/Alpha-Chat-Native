@@ -16,12 +16,11 @@ data class Conversation(
     val participants: List<User> = emptyList(),
     val lastMessage: Message? = null,
     val lastActivity: String? = null,
-    // Ignored in JSON - backend returns inconsistent types
-    @Transient val unreadCount: Int = 0,
-    // Populated client-side for UI convenience
-    var otherUser: User? = null
+    // Backend returns this pre-populated in getConversations
+    val otherUser: User? = null,
+    // Skip JSON parsing - backend returns  Map<String,Int> which Moshi can't handle generically
+    @Json(ignore = true) val unreadCount: Int = 0,
 ) {
-    // Backwards compatibility
     val participantIds: List<String> get() = participants.map { it.id }
     val lastMessageText: String get() = lastMessage?.content ?: ""
 }

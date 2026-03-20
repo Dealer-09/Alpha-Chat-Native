@@ -66,9 +66,6 @@ class MainActivity : ComponentActivity() {
                                     nav.navigate(Routes.HomeScreen) {
                                         popUpTo(Routes.LOGIN) { inclusive = true }
                                     }
-                                },
-                                onSignUpClick = {
-                                    nav.navigate(Routes.UserRegistrationScreen)
                                 }
                             )
                         }

@@ -233,10 +233,15 @@ class ChatRepository @Inject constructor(
                 val conversations = response.conversations ?: emptyList()
                 
                 // Populate otherUser for each conversation
+                // Backend pre-populates it; derive from participants as fallback
                 val currentId = currentUserId()
                 val populatedConvos = conversations.map { convo ->
-                    val other = convo.participants.find { it.id != currentId }
-                    convo.copy(otherUser = other)
+                    if (convo.otherUser != null) {
+                        convo // already populated from JSON
+                    } else {
+                        val other = convo.participants.find { it.id != currentId }
+                        convo.copy(otherUser = other)
+                    }
                 }
                 
                 _conversations.value = populatedConvos

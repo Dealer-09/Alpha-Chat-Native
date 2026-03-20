@@ -31,8 +31,12 @@ class AuthInterceptor @Inject constructor(
         
         // Add common headers
         requestBuilder.addHeader("Accept", "application/json")
-        requestBuilder.addHeader("Content-Type", "application/json")
-        
+        // Only add Content-Type for requests that have a body (POST, PATCH, PUT)
+        // Adding it to GET requests is technically incorrect
+        if (originalRequest.body != null) {
+            requestBuilder.addHeader("Content-Type", "application/json")
+        }
+
         return chain.proceed(requestBuilder.build())
     }
 }

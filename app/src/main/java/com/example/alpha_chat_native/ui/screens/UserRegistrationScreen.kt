@@ -30,10 +30,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.alpha_chat_native.vm.ChatViewModel
 import kotlin.random.Random
 
-// --- Colors from SplashScreen ---
-private val SplashBackground = Color(0xFF012106)
-private val SplashPrimary = Color(0xFF07AD52)
-private val SplashSecondary = Color(0xFF04450F)
+import com.example.alpha_chat_native.ui.theme.AlphaBackground
+import com.example.alpha_chat_native.ui.theme.AlphaPrimary
+import com.example.alpha_chat_native.ui.theme.AlphaSecondary
 
 @Composable
 fun UserRegistrationScreen(
@@ -56,9 +55,9 @@ fun UserRegistrationScreen(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        SplashBackground,
+                        AlphaBackground,
                         Color(0xFF020E2A),
-                        SplashBackground
+                        AlphaBackground
                     )
                 )
             )
@@ -145,7 +144,7 @@ fun RegistrationParticleBackground() {
         particles.forEach { particle ->
             val animatedY = (particle.y + particleProgress * particle.speed * 100) % 1f
             drawCircle(
-                color = SplashPrimary.copy(alpha = particle.alpha),
+                color = AlphaPrimary.copy(alpha = particle.alpha),
                 radius = particle.size.dp.toPx(),
                 center = Offset(
                     x = particle.x * size.width,
@@ -164,7 +163,7 @@ fun RegistrationParticleBackground() {
     ) {
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(SplashPrimary, Color.Transparent)
+                colors = listOf(AlphaPrimary, Color.Transparent)
             ),
             radius = size.minDimension / 2
         )
@@ -199,7 +198,7 @@ fun RegistrationParticleBackground() {
     ) {
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(SplashSecondary, Color.Transparent)
+                colors = listOf(AlphaSecondary, Color.Transparent)
             ),
             radius = size.minDimension / 2
         )
@@ -239,12 +238,12 @@ fun TerminalWindow(
         )
     )
     
-    val borderColor = SplashPrimary
+    val borderColor = AlphaPrimary
     val textColor = Color.White
-    val accentColor = SplashPrimary
-    val secondaryAccent = SplashSecondary
+    val accentColor = AlphaPrimary
+    val secondaryAccent = AlphaSecondary
     val inputBg = Color(0xFF000000).copy(alpha = 0.5f)
-    val inputBorder = SplashPrimary.copy(alpha = 0.5f)
+    val inputBorder = AlphaPrimary.copy(alpha = 0.5f)
     val inputText = Color.White
 
     Card(
@@ -278,7 +277,7 @@ fun TerminalWindow(
                         text = "alpha-chat@terminal ~ register",
                         fontFamily = FontFamily.Monospace,
                         fontSize = 12.sp,
-                        color = SplashPrimary
+                        color = AlphaPrimary
                     )
                     Spacer(modifier = Modifier.weight(1f))
                 }
@@ -323,7 +322,7 @@ fun TerminalWindow(
                         text = "$ sudo useradd --developer --group=alpha-coders",
                         fontFamily = FontFamily.Monospace,
                         fontSize = 12.sp,
-                        color = SplashPrimary,
+                        color = AlphaPrimary,
                         modifier = Modifier.padding(bottom = 24.dp)
                     )
 

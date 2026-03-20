@@ -26,7 +26,7 @@ class SocketManager @Inject constructor(
     private val tokenManager: TokenManager
 ) {
     companion object {
-        private const val BASE_URL = "https://alphachat-v2-backend.onrender.com"
+        private const val BASE_URL = "https://alphachat-v2.onrender.com"
     }
 
     private var socket: Socket? = null
@@ -135,10 +135,13 @@ class SocketManager @Inject constructor(
             }
 
             // Channel message received
+            // Backend sends: { channelId: "...", message: {...} }
             on("channelMessage") { args ->
                 try {
-                    val data = args.getOrNull(0) as? JSONObject ?: return@on
-                    val message = parseChannelMessage(data)
+                    val wrapper = args.getOrNull(0) as? JSONObject ?: return@on
+                    // Extract the nested message object from the wrapper
+                    val messageJson = wrapper.optJSONObject("message") ?: wrapper
+                    val message = parseChannelMessage(messageJson)
                     _channelMessages.tryEmit(message)
                     Timber.d("Received channel message: ${message.id}")
                 } catch (e: Exception) {
@@ -170,7 +173,7 @@ class SocketManager @Inject constructor(
             on("userTyping") { args ->
                 try {
                     val data = args.getOrNull(0) as? JSONObject ?: return@on
-                    val senderId = data.getString("senderId")
+                    val senderId = data.optString("userId", data.optString("senderId", ""))
                     val isTyping = data.getBoolean("isTyping")
                     val channelId = data.optString("channelId", "").takeIf { it.isNotEmpty() }
                     val recipientId = data.optString("recipientId", "").takeIf { it.isNotEmpty() }

@@ -90,7 +90,7 @@ class LoginViewModel @Inject constructor(
      * Uses dedicated mobile endpoint that redirects to backend's success page
      */
     fun getOAuthUrl(): String {
-        return "https://alphachat-v2-backend.onrender.com/api/auth/github/mobile"
+        return "https://alphachat-v2.onrender.com/api/auth/github/mobile"
     }
 
     /**

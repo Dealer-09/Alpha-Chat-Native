@@ -41,9 +41,8 @@ import com.example.alpha_chat_native.vm.ChatViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-// --- Theme Colors ---
-private val SplashPrimary = Color(0xFF07AD52)
-private val NeonGreen = Color(0xFF39FF14)
+import com.example.alpha_chat_native.ui.theme.AlphaPrimary
+import com.example.alpha_chat_native.ui.theme.AlphaNeonGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,7 +63,7 @@ fun ChatListScreen(
     }
 
     val textColor = Color.White
-    val accentColor = SplashPrimary
+    val accentColor = AlphaPrimary
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -137,7 +136,7 @@ fun ChatListScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                         .height(44.dp)
-                        .border(1.dp, Color(0xFF39ff14).copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                        .border(1.dp, AlphaNeonGreen.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
                         .background(Color(0xFF0d1117), RoundedCornerShape(8.dp))
                         .padding(horizontal = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -152,7 +151,7 @@ fun ChatListScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color(0xFF39ff14).copy(alpha = 0.7f)
+                            tint = AlphaNeonGreen.copy(alpha = 0.7f)
                         )
                     }
                     
@@ -168,7 +167,7 @@ fun ChatListScreen(
                             fontWeight = FontWeight.Normal
                         ),
                         singleLine = true,
-                        cursorBrush = SolidColor(Color(0xFF39ff14)),
+                        cursorBrush = SolidColor(AlphaNeonGreen),
                         decorationBox = { innerTextField ->
                             Box {
                                 if (searchQuery.isEmpty()) {
@@ -233,7 +232,7 @@ fun ConversationItem(
                 modifier = Modifier
                     .size(50.dp)
                     .clip(CircleShape)
-                    .border(BorderStroke(1.dp, SplashPrimary.copy(alpha = 0.5f)), CircleShape)
+                    .border(BorderStroke(1.dp, AlphaPrimary.copy(alpha = 0.5f)), CircleShape)
             ) {
                 Image(
                     painter = rememberAsyncImagePainter(model = imageModel),

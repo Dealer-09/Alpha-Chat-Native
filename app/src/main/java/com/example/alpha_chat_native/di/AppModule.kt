@@ -20,7 +20,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-    private const val BASE_URL = "https://alphachat-v2-backend.onrender.com/"
+    private const val BASE_URL = "https://alphachat-v2.onrender.com/"
 
     @Provides
     @Singleton

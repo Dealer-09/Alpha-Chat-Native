@@ -55,7 +55,8 @@ import com.example.alpha_chat_native.vm.ChatViewModel
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
-private val SplashBackground = Color(0xFF012106)
+import com.example.alpha_chat_native.ui.theme.AlphaBackground
+import com.example.alpha_chat_native.ui.theme.AlphaPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,9 +70,9 @@ fun SelectUserScreen(
 
     val backgroundBrush = Brush.verticalGradient(
         colors = listOf(
-            SplashBackground,
+            AlphaBackground,
             Color(0xFF020E2A),
-            SplashBackground
+            AlphaBackground
         )
     )
 
@@ -142,7 +143,7 @@ fun UserItem(
     val cardBgColor = Color(0xFF020E2A).copy(alpha = 0.5f)
     val textColor = Color.White
     val secondaryTextColor = Color.White.copy(alpha = 0.7f)
-    val splashPrimary = Color(0xFF07AD52)
+    val splashPrimary = AlphaPrimary
 
     Card(
         modifier = Modifier

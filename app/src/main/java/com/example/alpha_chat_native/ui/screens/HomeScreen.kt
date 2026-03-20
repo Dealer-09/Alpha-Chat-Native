@@ -17,14 +17,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import kotlin.random.Random
+import com.example.alpha_chat_native.ui.theme.AlphaBackground
+import com.example.alpha_chat_native.ui.theme.AlphaPrimary
+import com.example.alpha_chat_native.ui.theme.AlphaSecondary
+import com.example.alpha_chat_native.ui.theme.AlphaDark
 
-// --- Theme Colors ---
-private val SplashBackground = Color(0xFF012106)
-private val SplashPrimary = Color(0xFF07AD52)
-private val SplashSecondary = Color(0xFF04450F)
-
-// --- AlphaChat Terminal Colors (matching CommunityScreen) ---
-private val AlphaBackground = Color(0xFF0d1117)
+// Local color for community tab background
+private val CommunityBackground = Color(0xFF0d1117)
 private val AlphaTextPrimary = Color.White
 
 @Composable
@@ -38,16 +37,16 @@ fun HomeScreen(
     // Background based on Login/Splash theme
     val backgroundBrush = Brush.verticalGradient(
         colors = listOf(
-            SplashBackground,
+            AlphaBackground,
             Color(0xFF020E2A),
-            SplashBackground
+            AlphaBackground
         )
     )
 
     // Navigation Bar Colors
     val navBarColor = Color(0xFF020E2A).copy(alpha = 0.9f)
     val navContentColor = Color.White
-    val indicatorColor = SplashPrimary.copy(alpha = 0.2f)
+    val indicatorColor = AlphaPrimary.copy(alpha = 0.2f)
 
     Box(
         modifier = Modifier
@@ -65,7 +64,7 @@ fun HomeScreen(
             containerColor = Color.Transparent,
             bottomBar = {
                 NavigationBar(
-                    containerColor = if (selectedIndex == 2) AlphaBackground else navBarColor,
+                    containerColor = if (selectedIndex == 2) CommunityBackground else navBarColor,
                     contentColor = if (selectedIndex == 2) AlphaTextPrimary else navContentColor
                 ) {
                     NavigationBarItem(
@@ -75,8 +74,8 @@ fun HomeScreen(
                         onClick = { selectedIndex = 0 },
                         colors = NavigationBarItemDefaults.colors(
                             indicatorColor = indicatorColor,
-                            selectedIconColor = SplashPrimary,
-                            selectedTextColor = SplashPrimary,
+                            selectedIconColor = AlphaPrimary,
+                            selectedTextColor = AlphaPrimary,
                             unselectedIconColor = navContentColor.copy(alpha = 0.6f),
                             unselectedTextColor = navContentColor.copy(alpha = 0.6f)
                         )
@@ -88,8 +87,8 @@ fun HomeScreen(
                         onClick = { selectedIndex = 1 },
                         colors = NavigationBarItemDefaults.colors(
                             indicatorColor = indicatorColor,
-                            selectedIconColor = SplashPrimary,
-                            selectedTextColor = SplashPrimary,
+                            selectedIconColor = AlphaPrimary,
+                            selectedTextColor = AlphaPrimary,
                             unselectedIconColor = navContentColor.copy(alpha = 0.6f),
                             unselectedTextColor = navContentColor.copy(alpha = 0.6f)
                         )
@@ -101,8 +100,8 @@ fun HomeScreen(
                         onClick = { selectedIndex = 2 },
                         colors = NavigationBarItemDefaults.colors(
                             indicatorColor = indicatorColor,
-                            selectedIconColor = SplashPrimary,
-                            selectedTextColor = SplashPrimary,
+                            selectedIconColor = AlphaPrimary,
+                            selectedTextColor = AlphaPrimary,
                             unselectedIconColor = navContentColor.copy(alpha = 0.6f),
                             unselectedTextColor = navContentColor.copy(alpha = 0.6f)
                         )
@@ -114,8 +113,8 @@ fun HomeScreen(
                         onClick = { selectedIndex = 3 },
                         colors = NavigationBarItemDefaults.colors(
                             indicatorColor = indicatorColor,
-                            selectedIconColor = SplashPrimary,
-                            selectedTextColor = SplashPrimary,
+                            selectedIconColor = AlphaPrimary,
+                            selectedTextColor = AlphaPrimary,
                             unselectedIconColor = navContentColor.copy(alpha = 0.6f),
                             unselectedTextColor = navContentColor.copy(alpha = 0.6f)
                         )
@@ -179,7 +178,7 @@ fun HomeParticleBackground() {
         particles.forEach { particle ->
             val animatedY = (particle.y + particleProgress * particle.speed * 100) % 1f
             drawCircle(
-                color = SplashPrimary.copy(alpha = particle.alpha),
+                color = AlphaPrimary.copy(alpha = particle.alpha),
                 radius = particle.size.dp.toPx(),
                 center = Offset(
                     x = particle.x * size.width,
@@ -191,7 +190,7 @@ fun HomeParticleBackground() {
         // Subtle ambient glow
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(SplashSecondary.copy(alpha = 0.15f), Color.Transparent),
+                colors = listOf(AlphaSecondary.copy(alpha = 0.15f), Color.Transparent),
                 center = Offset(size.width * 0.8f, size.height * 0.2f),
                 radius = 400f * pulseScale
             ),
@@ -201,7 +200,7 @@ fun HomeParticleBackground() {
         
          drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(SplashPrimary.copy(alpha = 0.1f), Color.Transparent),
+                colors = listOf(AlphaPrimary.copy(alpha = 0.1f), Color.Transparent),
                 center = Offset(size.width * 0.2f, size.height * 0.8f),
                 radius = 300f * pulseScale
             ),

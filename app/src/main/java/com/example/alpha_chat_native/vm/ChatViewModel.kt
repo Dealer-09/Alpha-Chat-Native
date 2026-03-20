@@ -64,7 +64,8 @@ class ChatViewModel @Inject constructor(
                 val isFromChatPartner = chatPartnerId != null && message.fromId == chatPartnerId
                 
                 if (isFromChatPartner) {
-                    _messages.value = _messages.value + message
+                    // Prepend so newest is at index 0 (bottom with reverseLayout=true)
+                    _messages.value = listOf(message) + _messages.value
                 }
             }
         }
@@ -100,7 +101,8 @@ class ChatViewModel @Inject constructor(
             try {
                 _isLoading.value = true
                 val detail = repo.getConversation(chatId)
-                _messages.value = detail?.messages ?: emptyList()
+                // Reverse so newest is at index 0 — required for reverseLayout=true in LazyColumn
+                _messages.value = (detail?.messages ?: emptyList()).reversed()
             } catch (e: Exception) {
                 Timber.e(e, "Error loading messages")
                 _error.value = "Failed to load messages"
@@ -119,7 +121,8 @@ class ChatViewModel @Inject constructor(
             try {
                 val message = repo.sendDirectMessage(toId, text)
                 if (message != null) {
-                    _messages.value = _messages.value + message
+                    // Prepend so newest appears at bottom (reverseLayout=true, index 0 = bottom)
+                    _messages.value = listOf(message) + _messages.value
                 }
             } catch (e: Exception) {
                 _error.value = "Failed to send message"
@@ -151,23 +154,13 @@ class ChatViewModel @Inject constructor(
     }
 
     /**
-     * Update profile (name and image)
-     * Note: For GitHub OAuth users, profile updates are limited
+     * Update profile — limited for GitHub OAuth users.
+     * GitHub controls display name and avatar; they cannot be changed through this app.
+     * Emits an error state to inform the caller rather than silently faking success.
      */
     fun updateProfile(name: String, imageUri: Uri?, onSuccess: () -> Unit) {
         viewModelScope.launch {
-            _isLoading.value = true
-            _error.value = null
-            try {
-                // Profile is managed by GitHub OAuth - limited editing
-                // Just refresh user data
-                repo.getCurrentUser()
-                onSuccess()
-            } catch (e: Exception) {
-                _error.value = e.message ?: "Update failed"
-            } finally {
-                _isLoading.value = false
-            }
+            _error.value = "Profile is managed by GitHub. Update your name and avatar on github.com and re-login to sync changes."
         }
     }
 
