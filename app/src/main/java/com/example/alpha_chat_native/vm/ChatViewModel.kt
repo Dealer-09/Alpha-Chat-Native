@@ -74,6 +74,15 @@ class ChatViewModel @Inject constructor(
         if (repo.hasSession()) {
             refreshData()
         }
+
+        // Listen for locally synced messages
+        viewModelScope.launch {
+            repo.syncedMessages.collect { (oldId, newMessage) ->
+                val currentMessages = _messages.value
+                val updatedList = currentMessages.map { if (it.id == oldId) newMessage else it }
+                _messages.value = updatedList
+            }
+        }
     }
 
     /**

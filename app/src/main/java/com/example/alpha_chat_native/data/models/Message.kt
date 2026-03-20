@@ -23,7 +23,8 @@ data class Message(
     val isEdited: Boolean = false,
     val editedAt: String? = null,
     val createdAt: String? = null,
-    val updatedAt: String? = null
+    val updatedAt: String? = null,
+    val syncStatus: String = "SENT"
 ) {
     // Backwards compatibility
     val text: String get() = content
@@ -56,7 +57,8 @@ data class ChannelMessage(
     val isPinned: Boolean = false,
     val isDeleted: Boolean = false,
     val isEdited: Boolean = false,
-    val createdAt: String? = null
+    val createdAt: String? = null,
+    val syncStatus: String = "SENT"
 )
 
 /**

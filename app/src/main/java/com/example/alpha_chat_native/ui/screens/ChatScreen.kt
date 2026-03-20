@@ -13,6 +13,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -230,12 +232,34 @@ fun MessageBubble(
                 
                 message.timestamp?.let { ts ->
                     val sdf = SimpleDateFormat("hh:mm a", Locale.getDefault())
-                    Text(
-                        text = sdf.format(ts),
-                        fontSize = 10.sp,
-                        color = textColor.copy(alpha = 0.7f),
-                        modifier = Modifier.align(Alignment.End)
-                    )
+                    Row(
+                        modifier = Modifier.align(Alignment.End),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = sdf.format(ts),
+                            fontSize = 10.sp,
+                            color = textColor.copy(alpha = 0.7f)
+                        )
+                        if (isMe) {
+                            Spacer(modifier = Modifier.width(4.dp))
+                            if (message.syncStatus == "PENDING") {
+                                Icon(
+                                    imageVector = Icons.Default.Schedule,
+                                    contentDescription = "Pending",
+                                    tint = textColor.copy(alpha = 0.5f),
+                                    modifier = Modifier.size(12.dp)
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Sent",
+                                    tint = AlphaNeonGreen.copy(alpha = 0.8f),
+                                    modifier = Modifier.size(12.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }

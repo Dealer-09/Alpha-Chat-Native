@@ -30,7 +30,8 @@ data class MessageEntity(
     val editedAt: String? = null,
     val createdAt: String? = null,
     val updatedAt: String? = null,
-    val cachedAt: Long = System.currentTimeMillis()
+    val cachedAt: Long = System.currentTimeMillis(),
+    val syncStatus: String = "SENT" // PENDING, SENT, FAILED
 )
 
 // Extension functions
@@ -55,7 +56,8 @@ fun MessageEntity.toModel(): Message = Message(
     isEdited = isEdited,
     editedAt = editedAt,
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    syncStatus = syncStatus
 )
 
 fun Message.toEntity(): MessageEntity = MessageEntity(
@@ -77,5 +79,6 @@ fun Message.toEntity(): MessageEntity = MessageEntity(
     isEdited = isEdited,
     editedAt = editedAt,
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    syncStatus = syncStatus
 )

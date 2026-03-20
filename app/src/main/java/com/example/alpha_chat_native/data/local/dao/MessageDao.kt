@@ -35,6 +35,12 @@ interface MessageDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(message: MessageEntity)
     
+    @Query("SELECT * FROM messages WHERE syncStatus = 'PENDING' ORDER BY createdAt ASC")
+    suspend fun getPendingMessages(): List<MessageEntity>
+    
+    @Query("UPDATE messages SET syncStatus = :status, id = :newId WHERE id = :oldId")
+    suspend fun updateSyncStatus(oldId: String, newId: String, status: String)
+
     @Query("DELETE FROM messages WHERE conversation = :conversationId")
     suspend fun deleteByConversation(conversationId: String)
     

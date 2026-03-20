@@ -19,7 +19,7 @@ import com.example.alpha_chat_native.data.local.entities.UserEntity
         MessageEntity::class,
         ConversationEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AlphaChatDatabase : RoomDatabase() {

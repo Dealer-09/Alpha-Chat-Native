@@ -7,11 +7,18 @@ import com.example.alpha_chat_native.data.local.entities.toEntity
 import com.example.alpha_chat_native.data.local.entities.toModel
 import com.example.alpha_chat_native.data.models.*
 import com.example.alpha_chat_native.data.remote.*
+import android.content.Context
+import androidx.work.*
+import com.example.alpha_chat_native.worker.MessageSyncWorker
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,6 +29,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class ChatRepository @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val api: AlphaChatApi,
     private val socketManager: SocketManager,
     private val tokenManager: TokenManager,
@@ -34,6 +42,13 @@ class ChatRepository @Inject constructor(
     private val _users = MutableStateFlow<List<User>>(emptyList())
     private val _conversations = MutableStateFlow<List<Conversation>>(emptyList())
     private val _channels = MutableStateFlow<List<Channel>>(emptyList())
+
+    private val _syncedMessages = MutableSharedFlow<Pair<String, Message>>()
+    val syncedMessages = _syncedMessages.asSharedFlow()
+
+    suspend fun notifyMessageSynced(oldId: String, newMessage: Message) {
+        _syncedMessages.emit(Pair(oldId, newMessage))
+    }
 
     // ═══════════════════════════════════════════════════════════════════════════
     // AUTHENTICATION
@@ -299,10 +314,17 @@ class ChatRepository @Inject constructor(
                 } catch (e: Exception) {
                     Timber.w(e, "Failed to cache messages")
                 }
+                // Fetch any pending messages from cache to append to the fresh API list
+                val pendingMessages = cachedMessages.filter { it.syncStatus == "PENDING" }
+                val mergedMessages = if (pendingMessages.isNotEmpty()) {
+                    (messages + pendingMessages).sortedBy { it.createdAt }
+                } else {
+                    messages
+                }
                 
                 ConversationDetail(
                     conversation = response.conversation,
-                    messages = messages,
+                    messages = mergedMessages,
                     pagination = response.pagination
                 )
             } else {
@@ -336,20 +358,80 @@ class ChatRepository @Inject constructor(
     }
 
     /**
+     * Internal helper to enqueue the sync worker
+     */
+    private fun enqueueSyncWorker() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+            
+        val syncRequest = OneTimeWorkRequestBuilder<MessageSyncWorker>()
+            .setConstraints(constraints)
+            .build()
+            
+        WorkManager.getInstance(context)
+            .enqueueUniqueWork(
+                "OfflineMessageSync",
+                ExistingWorkPolicy.REPLACE,
+                syncRequest
+            )
+    }
+
+    /**
      * Send direct message
      */
     suspend fun sendDirectMessage(recipientId: String, content: String, messageType: String = "text"): Message? {
+        val tempId = "pending_\${UUID.randomUUID()}"
+        
+        // Use cached user or construct a minimal one for offline UI rendering
+        var sender = currentUser()
+        if (sender == null) {
+            val cachedUserId = tokenManager.getUserId()
+            if (cachedUserId != null) {
+                sender = try {
+                    userDao.getById(cachedUserId)?.toModel()
+                } catch (e: Exception) {
+                    null
+                } ?: User(_id = cachedUserId, username = "Me")
+            }
+        }
+        
+        // 1. Create a pending Message object
+        val pendingMessage = Message(
+            id = tempId,
+            sender = sender,
+            receiver = recipientId,
+            conversation = recipientId, // Simplified, the real conversation ID comes from backend
+            content = content,
+            messageType = messageType,
+            syncStatus = "PENDING",
+            createdAt = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US)
+                .format(java.util.Date())
+        )
+
+        // 2. Save it locally as PENDING
+        try {
+            messageDao.insert(pendingMessage.toEntity())
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to caching pending message")
+        }
+
+        // 3. Try to send it remotely
         return try {
             val request = SendMessageRequest(content, messageType)
             val response = api.sendDirectMessage(recipientId, request)
-            if (response.success) {
+            if (response.success && response.messageData != null) {
+                // Update local to SENT
+                messageDao.updateSyncStatus(oldId = tempId, newId = response.messageData.id, status = "SENT")
                 response.messageData
             } else {
-                null
+                enqueueSyncWorker()
+                pendingMessage
             }
         } catch (e: Exception) {
-            Timber.e(e, "Send message failed")
-            null
+            Timber.e(e, "Send message failed - queued for offline")
+            enqueueSyncWorker()
+            pendingMessage
         }
     }
 
@@ -412,10 +494,38 @@ class ChatRepository @Inject constructor(
         return try {
             val response = api.getChannel(slug, page)
             if (response.success && response.channel != null) {
+                // Fetch pending messages from local cache for this channel
+                var pendingMessages: List<ChannelMessage> = emptyList()
+                try {
+                    val cached = messageDao.getByConversation(response.channel.id)
+                    pendingMessages = cached
+                        .map { it.toModel() }
+                        .filter { it.syncStatus == "PENDING" }
+                        .map { msg ->
+                            ChannelMessage(
+                                id = msg.id,
+                                channel = msg.conversation,
+                                sender = msg.sender,
+                                content = msg.content,
+                                messageType = msg.messageType,
+                                syncStatus = msg.syncStatus,
+                                createdAt = msg.createdAt
+                            )
+                        }
+                } catch (e: Exception) {
+                    Timber.w(e, "Failed to load cached pending messages for channel")
+                }
+                
+                val allMessages = if (pendingMessages.isNotEmpty()) {
+                    (response.messages + pendingMessages).sortedBy { it.createdAt }
+                } else {
+                    response.messages
+                }
+
                 // Build ChannelDetail from separate response fields
                 ChannelDetail(
                     channel = response.channel,
-                    messages = response.messages,
+                    messages = allMessages,
                     pagination = response.pagination
                 )
             } else {
@@ -470,17 +580,67 @@ class ChatRepository @Inject constructor(
      * Send message to channel
      */
     suspend fun sendChannelMessage(channelId: String, content: String, messageType: String = "text"): ChannelMessage? {
+        val tempId = "pending_\${UUID.randomUUID()}"
+        
+        // Use cached user or construct a minimal one for offline UI rendering
+        var sender = currentUser()
+        if (sender == null) {
+            val cachedUserId = tokenManager.getUserId()
+            if (cachedUserId != null) {
+                sender = try {
+                    userDao.getById(cachedUserId)?.toModel()
+                } catch (e: Exception) {
+                    null
+                } ?: User(_id = cachedUserId, username = "Me")
+            }
+        }
+        
+        // 1. Create a pending ChannelMessage 
+        val pendingMessage = ChannelMessage(
+            id = tempId,
+            channel = channelId,
+            sender = sender,
+            content = content,
+            messageType = messageType,
+            syncStatus = "PENDING",
+            createdAt = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US)
+                .format(java.util.Date())
+        )
+        
+        // Room Entity requires a regular Message format, so we convert it
+        val pendingEntity = Message(
+            id = tempId,
+            sender = sender,
+            receiver = "",
+            conversation = channelId,
+            content = content,
+            messageType = messageType,
+            syncStatus = "PENDING",
+            createdAt = pendingMessage.createdAt
+        ).toEntity()
+
+        // 2. Save locally
+        try {
+            messageDao.insert(pendingEntity)
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to cache pending channel message")
+        }
+
+        // 3. Try to send remotely
         return try {
             val request = SendMessageRequest(content, messageType)
             val response = api.sendChannelMessage(channelId, request)
-            if (response.success) {
+            if (response.success && response.message != null) {
+                messageDao.updateSyncStatus(oldId = tempId, newId = response.message.id, status = "SENT")
                 response.message
             } else {
-                null
+                enqueueSyncWorker()
+                pendingMessage
             }
         } catch (e: Exception) {
-            Timber.e(e, "Send channel message failed")
-            null
+            Timber.e(e, "Send channel message failed - queued for offline")
+            enqueueSyncWorker()
+            pendingMessage
         }
     }
 

@@ -5,8 +5,21 @@ import com.google.firebase.FirebaseApp
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
 
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
+import javax.inject.Inject
+
 @HiltAndroidApp
-class AlphaChatApplication : Application() {
+class AlphaChatApplication : Application(), Configuration.Provider {
+    
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
+
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
+            
     override fun onCreate() {
         super.onCreate()
         
